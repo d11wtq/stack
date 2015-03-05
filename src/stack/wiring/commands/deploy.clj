@@ -1,28 +1,19 @@
 (ns stack.wiring.commands.deploy
   (:require [stack.commands.deploy :as deploy]
+            [stack.util :as util]
             [stack.wiring.aws.cloudformation :as cloudformation]
-            [clojure.tools.cli :refer  [parse-opts]]))
-
-; FIXME: Move this to a util ns, test it
-(defn error
-  [msg]
-  (throw (Exception. msg)))
-
-; FIXME: Move this to a util ns, test it
-(defn usage
-  [summary]
-  (println (deploy/usage summary)))
+            [clojure.tools.cli :refer [parse-opts]]))
 
 (def action
   (partial deploy/action
-           {:error-fn error
+           {:error-fn util/error-fn
             :deploy-fn cloudformation/deploy-stack}))
 
 (def handle-args
   (partial deploy/handle-args
-           {:error-fn error
+           {:error-fn util/error-fn
             :action-fn action
-            :usage-fn usage}))
+            :usage-fn (util/make-print-usage-fn deploy/usage)}))
 
 (def dispatch
   (partial deploy/dispatch
