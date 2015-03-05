@@ -10,10 +10,9 @@
 (deftest make-print-usage-fn-test
   (testing "#'make-print-usage-fn"
     (testing "returns a function that prints usage"
-      (let [usage (fn [summary] (str "Options:"
-                                     \newline
-                                     summary))]
+      (let [summary "  -h, --help  Show this help"
+            usage (fn [s] (str "Options:\n" s))]
         (is (= (with-out-str
                  ((util/make-print-usage-fn usage)
-                  "  -h, --help    Show Help"))
-               "Options:\n  -h, --help    Show Help\n"))))))
+                  summary))
+               (str "Options:\n" summary "\n")))))))
