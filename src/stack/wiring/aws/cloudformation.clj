@@ -5,9 +5,9 @@
 
 (def apply-stack
   (partial cloudformation/apply-stack
-           create-stack
-           update-stack))
+           {:create-fn create-stack
+            :update-fn update-stack}))
 
 (def deploy-stack
   (partial cloudformation/deploy-stack
-           apply-stack))
+           {:apply-fn apply-stack}))

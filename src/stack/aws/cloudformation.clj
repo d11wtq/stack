@@ -12,7 +12,7 @@
 
 (defn apply-stack
   "Create or update a stack using the given payload."
-  [create-fn update-fn payload]
+  [{:keys [create-fn update-fn]} payload]
   (try
     (create-fn payload)
     (catch AlreadyExistsException e
@@ -20,7 +20,7 @@
 
 (defn deploy-stack
   "Create or update stack-name using template and params."
-  [apply-fn stack-name template params]
+  [{:keys [apply-fn]} stack-name template params]
   (let [payload {:stack-name stack-name
                  :template-body (json/write-str template)
                  :parameters (expand-parameters params)}]

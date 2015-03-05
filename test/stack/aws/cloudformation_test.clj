@@ -23,8 +23,8 @@
       (testing "applies create-fn with payload"
         (let [create-fn (bond/spy (constantly nil))
               update-fn (constantly nil)]
-          (apply-stack create-fn
-                       update-fn
+          (apply-stack {:create-fn create-fn
+                        :update-fn update-fn}
                        payload)
           (is (= (-> (bond/calls create-fn) first :args)
                  [payload]))))
@@ -33,8 +33,8 @@
         (testing "applies update-fn with payload"
           (let [create-fn (fn [& args] (throw (AlreadyExistsException. "test")))
                 update-fn (bond/spy (constantly nil))]
-            (apply-stack create-fn
-                         update-fn
+            (apply-stack {:create-fn create-fn
+                          :update-fn update-fn}
                          payload)
             (is (= (-> (bond/calls update-fn) first :args)
                  [payload]))))))))
@@ -43,7 +43,7 @@
   (testing "#'deploy-stack"
     (testing "applies apply-fn with a constructed payload"
       (let [apply-fn (bond/spy (constantly nil))]
-        (deploy-stack apply-fn
+        (deploy-stack {:apply-fn apply-fn}
                       "example"
                       {:Description "Example"}
                       {:amiId "ami-abc123"})
