@@ -14,15 +14,6 @@
 (defn action
   [{:keys [deploy-fn error-fn]} arguments options])
 
-(defn handle-args
-  [{:keys [action-fn usage-fn error-fn]}
-   {:keys [arguments options summary errors]}]
-  (if-let [msg (first errors)]
-    (error-fn msg)
-    (if (:help options)
-      (usage-fn summary)
-      (action-fn arguments options))))
-
 (defn dispatch
   [{:keys [parse-fn handler-fn]} & args]
   (handler-fn (parse-fn args flags)))

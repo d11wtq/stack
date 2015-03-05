@@ -10,10 +10,10 @@
             :subcommands [[:deploy deploy/dispatch]]}))
 
 (def handle-args
-  (partial help/handle-args
-           {:error-fn util/error-fn
-            :action-fn action
-            :usage-fn (util/make-print-usage-fn help/usage)}))
+  (util/make-handler-fn
+    {:error-fn util/error-fn
+     :action-fn action
+     :usage-fn (util/make-print-usage-fn help/usage)}))
 
 (def dispatch
   (partial help/dispatch

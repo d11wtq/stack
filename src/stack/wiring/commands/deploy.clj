@@ -10,10 +10,10 @@
             :deploy-fn cloudformation/deploy-stack}))
 
 (def handle-args
-  (partial deploy/handle-args
-           {:error-fn util/error-fn
-            :action-fn action
-            :usage-fn (util/make-print-usage-fn deploy/usage)}))
+  (util/make-handler-fn
+    {:error-fn util/error-fn
+     :action-fn action
+     :usage-fn (util/make-print-usage-fn deploy/usage)}))
 
 (def dispatch
   (partial deploy/dispatch
