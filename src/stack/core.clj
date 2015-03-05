@@ -1,6 +1,6 @@
-(ns stack.core)
+(ns stack.core
+  (:require [stack.wiring.commands.deploy]))
 
-(defn foo
-  "I don't do a whole lot."
-  [x]
-  (println x "Hello, World!"))
+(defn dispatch
+  "Accept a two-dimensional command vector and apply a subcommand using args."
+  [commands & args])

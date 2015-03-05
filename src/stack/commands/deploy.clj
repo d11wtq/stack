@@ -21,7 +21,7 @@
     (error-fn msg)
     (if (:help options)
       (usage-fn summary)
-      (action-fn error-fn arguments options))))
+      (action-fn arguments options))))
 
 (defn dispatch
   [{:keys [parse-fn handler-fn]} & args]
