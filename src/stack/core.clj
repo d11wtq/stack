@@ -2,7 +2,8 @@
   (:require [clojure.tools.cli :refer [parse-opts]]
             [stack.util :as util]
             [stack.wiring.commands.deploy :as deploy]
-            [stack.wiring.commands.help :as help]))
+            [stack.wiring.commands.help :as help])
+  (:gen-class))
 
 (def flags
   "Supported command line flags"

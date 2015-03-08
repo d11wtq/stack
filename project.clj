@@ -8,4 +8,5 @@
                  [org.clojure/tools.cli "0.3.1"]
                  [org.clojure/data.json "0.2.5"]
                  [bond "0.2.5"]]
+  :aot [stack.core]
   :main stack.core)
