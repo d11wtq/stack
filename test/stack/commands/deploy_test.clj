@@ -13,12 +13,21 @@
    :Parameters {:dockerImage {:Type "String"}
                 :hostPort {:Type "Number"}}})
 
+(def sample-params-path
+  "tmp/sample-params.json")
+
+(def sample-params
+  {:dockerImage "d11wtq/example:latest"
+   :hostPort "80"})
+
 (use-fixtures
   :once
   (fn [f]
     (spit sample-template-path
           (json/write-str sample-template))
 
+    (spit sample-params-path
+          (json/write-str sample-params))
     (f)))
 
 (deftest action-test
@@ -63,4 +72,17 @@
             (is (= (-> (bond/calls deploy-fn) first :args)
                    ["example-stack"
                     sample-template
-                    (hash-map)]))))))))
+                    (hash-map)])))))
+
+      (testing "with --params"
+        (testing "applies deploy-fn with file contents"
+          (let [error-fn (constantly nil)
+                deploy-fn (bond/spy (constantly nil))]
+            (deploy/action {:error-fn error-fn
+                            :deploy-fn deploy-fn}
+                           ["example-stack" sample-template-path]
+                           {:params sample-params-path})
+            (is (= (-> (bond/calls deploy-fn) first :args)
+                   ["example-stack"
+                    sample-template
+                    sample-params]))))))))

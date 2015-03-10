@@ -44,10 +44,13 @@
   [{:keys [deploy-fn error-fn]} arguments options]
   (if-let [msg (validate-all arguments options)]
     (error-fn msg)
-    (let [[stack-name template] arguments]
+    (let [[stack-name template] arguments
+          {:keys [params]} options]
       (deploy-fn stack-name
                  (slurp-json template)
-                 (hash-map)))))
+                 (if (nil? params)
+                   (hash-map)
+                   (slurp-json params))))))
 
 (defn dispatch
   [{:keys [parse-fn handler-fn]} & args]
