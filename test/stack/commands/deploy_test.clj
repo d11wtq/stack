@@ -85,4 +85,36 @@
             (is (= (-> (bond/calls deploy-fn) first :args)
                    ["example-stack"
                     sample-template
-                    sample-params]))))))))
+                    sample-params])))))
+
+      (testing "with key=value overrides"
+        (testing "applies deploy-fn with merged params"
+          (let [error-fn (constantly nil)
+                deploy-fn (bond/spy (constantly nil))]
+            (deploy/action {:error-fn error-fn
+                            :deploy-fn deploy-fn}
+                           ["example-stack"
+                            sample-template-path
+                            "hostPort=81"]
+                           {:params sample-params-path})
+            (is (= (-> (bond/calls deploy-fn) first :args)
+                   ["example-stack"
+                    sample-template
+                    (merge sample-params
+                           {:hostPort "81"})]))))
+
+        (testing "with invalid syntax"
+          (testing "applies error-fn"
+            (let [error-fn (bond/spy (constantly nil))
+                  deploy-fn (constantly nil)]
+              (deploy/action {:error-fn error-fn
+                              :deploy-fn deploy-fn}
+                             ["example-stack"
+                              sample-template-path
+                              "hostPort" " =81"]
+                             {:params sample-params-path})
+              (is (re-find #"hostPort"
+                           (-> (bond/calls error-fn)
+                               first
+                               :args
+                               first))))))))))
