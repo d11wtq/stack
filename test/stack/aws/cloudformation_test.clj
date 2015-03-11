@@ -3,7 +3,8 @@
             [bond.james :as bond]
             [stack.aws.cloudformation :refer [expand-parameters
                                               apply-stack
-                                              deploy-stack]])
+                                              deploy-stack
+                                              list-stack-events-fn]])
   (:import [com.amazonaws.services.cloudformation.model
             AlreadyExistsException]))
 
@@ -52,3 +53,20 @@
                  :template-body "{\"Description\":\"Example\"}"
                  :parameters [{:parameter-key "amiId"
                                :parameter-value "ami-abc123"}]}]))))))
+
+(deftest list-stack-events-test
+  (testing "#'list-stack-events"
+    (testing "lists events"
+      (let [events-fn (bond/spy (constantly nil))]
+        ((list-stack-events-fn :events-fn events-fn) "example")
+        (is (= (-> (bond/calls events-fn) first :args)
+               [:stack-name "example"]))))
+
+    (testing "returns all events in reverse order"
+      (let [events-fn (fn [& {:keys [next-token]}]
+                        (if (= "test-token" next-token)
+                          {:stack-events [:c :b :a]}
+                          {:stack-events [:f :e :d]
+                           :next-token "test-token"}))]
+        (is (= [:a :b :c :d :e :f]
+               ((list-stack-events-fn :events-fn events-fn) "example")))))))

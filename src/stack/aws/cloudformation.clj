@@ -25,3 +25,23 @@
                  :template-body (json/write-str template)
                  :parameters (expand-parameters params)}]
     (apply-fn payload)))
+
+(defn list-stack-events-fn
+  "Get a list of all events for stack-name."
+  [& {:keys [events-fn]}]
+  (fn list-stack-events
+    ([stack-name]
+     (list-stack-events stack-name (vector)))
+    ([stack-name seen]
+     (list-stack-events stack-name seen nil))
+    ([stack-name seen next-token]
+     (let [payload [:stack-name stack-name
+                    :next-token next-token]
+           response (apply events-fn
+                           (if (nil? next-token)
+                             (take 2 payload)
+                             payload))
+           new-seen (concat seen (:stack-events response))]
+       (if-let [new-next-token (:next-token response)]
+         (recur stack-name new-seen new-next-token)
+         (reverse new-seen))))))
