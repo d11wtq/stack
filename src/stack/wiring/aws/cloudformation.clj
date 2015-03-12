@@ -1,7 +1,8 @@
 (ns stack.wiring.aws.cloudformation
   (:require [stack.aws.cloudformation :as cloudformation]
             [amazonica.aws.cloudformation :refer [create-stack
-                                                  update-stack]]))
+                                                  update-stack
+                                                  describe-stack-events]]))
 
 (def apply-stack
   (partial cloudformation/apply-stack
@@ -11,3 +12,7 @@
 (def deploy-stack
   (partial cloudformation/deploy-stack
            {:apply-fn apply-stack}))
+
+(def list-stack-events
+  (cloudformation/list-stack-events-fn
+    :events-fn describe-stack-events))
