@@ -10,21 +10,25 @@
     (map #(zipmap key-names %)
          (stringify-keys params))))
 
-(defn apply-stack
+(defn apply-stack-fn
   "Create or update a stack using the given payload."
-  [{:keys [create-fn update-fn]} payload]
-  (try
-    (create-fn payload)
-    (catch AlreadyExistsException e
-      (update-fn payload))))
+  [& {:keys [create-fn update-fn]}]
+  (fn apply-stack
+    [payload]
+    (try
+      (create-fn payload)
+      (catch AlreadyExistsException e
+        (update-fn payload)))))
 
-(defn deploy-stack
+(defn deploy-stack-fn
   "Create or update stack-name using template and params."
-  [{:keys [apply-fn]} stack-name template params]
-  (let [payload {:stack-name stack-name
-                 :template-body (json/write-str template)
-                 :parameters (expand-parameters params)}]
-    (apply-fn payload)))
+  [& {:keys [apply-fn]}]
+  (fn deploy-stack
+    [stack-name template params]
+    (let [payload {:stack-name stack-name
+                   :template-body (json/write-str template)
+                   :parameters (expand-parameters params)}]
+      (apply-fn payload))))
 
 (defn list-stack-events-fn
   "Get a list of all events for stack-name."

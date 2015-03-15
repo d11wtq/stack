@@ -6,13 +6,13 @@
                                                   describe-stack-resource]]))
 
 (def apply-stack
-  (partial cloudformation/apply-stack
-           {:create-fn create-stack
-            :update-fn update-stack}))
+  (cloudformation/apply-stack-fn
+    :create-fn create-stack
+    :update-fn update-stack))
 
 (def deploy-stack
-  (partial cloudformation/deploy-stack
-           {:apply-fn apply-stack}))
+  (cloudformation/deploy-stack-fn
+    :apply-fn apply-stack))
 
 (def list-stack-events
   (cloudformation/list-stack-events-fn
