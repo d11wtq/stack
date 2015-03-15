@@ -28,17 +28,6 @@
            (str "[" (:resource-status event) "]")
            (str (:resource-status-reason event))))
 
-(defn events-seq
-  [{:keys [seq-fn sleep-fn]} stack-name & {:keys [follow]}]
-  (if follow
-    (-> (repeatedly
-          (fn []
-            (sleep-fn)
-            (seq-fn stack-name)))
-        flatten
-        distinct)
-    (seq-fn stack-name)))
-
 ; FIXME: Extract this to util
 (defn validate-all
   [arguments options]

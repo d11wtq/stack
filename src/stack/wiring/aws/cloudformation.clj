@@ -16,3 +16,8 @@
 (def list-stack-events
   (cloudformation/list-stack-events-fn
     :events-fn describe-stack-events))
+
+(def stack-events-seq
+  (cloudformation/stack-events-seq-fn
+    :list-fn list-stack-events
+    :sleep-fn #(Thread/sleep 5000)))

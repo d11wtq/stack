@@ -4,15 +4,10 @@
             [stack.wiring.aws.cloudformation :as cloudformation]
             [clojure.tools.cli :refer [parse-opts]]))
 
-(def events-seq
-  (partial events/events-seq
-           {:seq-fn cloudformation/list-stack-events
-            :sleep-fn #(Thread/sleep 10000)}))
-
 (def action
   (partial events/action
            {:error-fn util/error-fn
-            :events-fn events-seq
+            :events-fn cloudformation/stack-events-seq
             :report-fn events/report-event}))
 
 (def handle-args

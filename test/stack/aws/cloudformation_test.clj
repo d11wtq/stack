@@ -4,7 +4,8 @@
             [stack.aws.cloudformation :refer [expand-parameters
                                               apply-stack
                                               deploy-stack
-                                              list-stack-events-fn]])
+                                              list-stack-events-fn
+                                              stack-events-seq-fn]])
   (:import [com.amazonaws.services.cloudformation.model
             AlreadyExistsException]))
 
@@ -60,13 +61,43 @@
       (let [events-fn (bond/spy (constantly nil))]
         ((list-stack-events-fn :events-fn events-fn) "example")
         (is (= (-> (bond/calls events-fn) first :args)
-               [:stack-name "example"]))))
+               [{:stack-name "example"}]))))
 
     (testing "returns all events in reverse order"
-      (let [events-fn (fn [& {:keys [next-token]}]
+      (let [events-fn (fn [{:keys [next-token]}]
                         (if (= "test-token" next-token)
                           {:stack-events [:c :b :a]}
                           {:stack-events [:f :e :d]
                            :next-token "test-token"}))]
         (is (= [:a :b :c :d :e :f]
                ((list-stack-events-fn :events-fn events-fn) "example")))))))
+
+(deftest stack-events-seq-test
+  (testing "#'stack-events-seq"
+    (testing "with :follow false"
+      (testing "applies list-fn with stack-name and returns the result"
+        (let [list-fn (bond/spy (constantly ["a" "b" "c"]))
+              sleep-fn (constantly nil)
+              result ((stack-events-seq-fn
+                        :list-fn list-fn
+                        :sleep-fn sleep-fn) "example" :follow false)]
+          (is (= ["a" "b" "c"] result))
+          (is (= (-> (bond/calls list-fn) first :args)
+                 ["example"])))))
+
+    (testing "with :follow true"
+      (testing "applies distinct items from successive calls to list-fn"
+        (let [items (atom (list ["a" "b" "c"]
+                                ["c" "d" "e"]
+                                ["d" "e" "f"]
+                                ["g" "h" "i"]))
+              list-fn (bond/spy (fn [s]
+                                  (let [v (first @items)]
+                                    (swap! items pop)
+                                    v)))
+              sleep-fn (constantly nil)
+              result ((stack-events-seq-fn
+                        :list-fn list-fn
+                        :sleep-fn sleep-fn) "example" :follow true)]
+          (is (= ["a" "b" "c" "d" "e" "f"]
+                 (take 6 result))))))))
