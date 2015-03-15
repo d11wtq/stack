@@ -1,5 +1,6 @@
 (ns stack.commands.deploy
   (:require [clojure.data.json :as json]
+            [stack.util :as util]
             [stack.params :refer [parse-params]]))
 
 (def flags
@@ -34,14 +35,10 @@
       :errors
       first))
 
-(defn validate-all
-  [arguments options]
-  (letfn [(validate [f]
-            (f arguments options))]
-    (some validate
-          [validate-stack-name
-           validate-template
-           validate-params])))
+(def validate-all
+  (util/make-validate-fn [validate-stack-name
+                          validate-template
+                          validate-params]))
 
 (defn slurp-json
   [path]

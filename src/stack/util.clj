@@ -20,3 +20,10 @@
       (if (:help options)
         (usage-fn summary)
         (action-fn arguments options)))))
+
+(defn make-validate-fn
+  "Create a fn implementing a strategy across many validators."
+  [validators]
+  (fn [arguments options]
+    (some #(% arguments options)
+          validators)))

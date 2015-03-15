@@ -1,4 +1,5 @@
-(ns stack.commands.events)
+(ns stack.commands.events
+  (:require [stack.util :as util]))
 
 (def flags
   "Supported command line flags"
@@ -28,12 +29,8 @@
            (str "[" (:resource-status event) "]")
            (str (:resource-status-reason event))))
 
-; FIXME: Extract this to util
-(defn validate-all
-  [arguments options]
-  (letfn [(validate [f] (f arguments options))]
-    (some validate
-          [validate-stack-name])))
+(def validate-all
+  (util/make-validate-fn [validate-stack-name]))
 
 (defn action
   [{:keys [events-fn report-fn error-fn]} arguments options]
