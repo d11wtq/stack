@@ -5,7 +5,8 @@
                                               apply-stack
                                               deploy-stack
                                               list-stack-events-fn
-                                              stack-events-seq-fn]])
+                                              stack-events-seq-fn
+                                              physical-resource-id-fn]])
   (:import [com.amazonaws.services.cloudformation.model
             AlreadyExistsException]))
 
@@ -101,3 +102,21 @@
                         :sleep-fn sleep-fn) "example" :follow true)]
           (is (= ["a" "b" "c" "d" "e" "f"]
                  (take 6 result))))))))
+
+(deftest physical-resource-id-test
+  (testing "#'physical-resource-id"
+    (testing "gets stack resource detail"
+      (let [stack-resource-fn (bond/spy (constantly nil))]
+        ((physical-resource-id-fn :stack-resource-fn stack-resource-fn)
+         "example" "logical-id")
+        (is (= (-> (bond/calls stack-resource-fn) first :args)
+               [{:stack-name "example"
+                 :logical-resource-id "logical-id"}]))))
+
+    (testing "extracts the physical-resource-id"
+      (let [stack-resource-fn (constantly
+                                {:stack-resource-detail
+                                 {:physical-resource-id "physical-id"}})]
+        (is (= "physical-id"
+               ((physical-resource-id-fn :stack-resource-fn stack-resource-fn)
+                "example" "logical-id")))))))

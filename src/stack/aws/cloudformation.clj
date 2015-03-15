@@ -60,3 +60,15 @@
            flatten
            distinct)
       (list-fn stack-name))))
+
+(defn physical-resource-id-fn
+  "Get the physical-resource-id from logical-resource-id in stack-name."
+  [& {:keys [stack-resource-fn]}]
+  (fn physical-resource-id
+    [stack-name logical-resource-id]
+    (let [payload {:stack-name stack-name
+                   :logical-resource-id logical-resource-id}
+          response (stack-resource-fn payload)]
+      (-> response
+          :stack-resource-detail
+          :physical-resource-id))))
