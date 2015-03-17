@@ -3,6 +3,7 @@
             [stack.util :as util]
             [stack.wiring.commands.deploy :as deploy]
             [stack.wiring.commands.events :as events]
+            [stack.wiring.commands.signal :as signal]
             [stack.wiring.commands.help :as help])
   (:gen-class))
 
@@ -36,5 +37,6 @@
   (make-dispatch-fn
     {:deploy deploy/dispatch
      :events events/dispatch
+     :signal signal/dispatch
      :help help/dispatch}
     util/error-fn))

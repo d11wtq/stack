@@ -3,6 +3,36 @@
             [bond.james :as bond]
             [stack.commands.signal :as signal]))
 
+(deftest instance-states-seq-test
+  (testing "#'instance-states-seq"
+    (testing "applies physical-id-fn with stack-name and elb"
+      (let [seq-fn (constantly nil)
+            physical-id-fn (bond/spy (constantly nil))]
+        (signal/instance-states-seq {:seq-fn seq-fn
+                                     :physical-id-fn physical-id-fn}
+                                    "example"
+                                    "loadBalancer")
+        (is (= (-> (bond/calls physical-id-fn) first :args)
+               ["example" "loadBalancer"]))))
+
+    (testing "applies seq-fn with the result of physical-id-fn"
+      (let [seq-fn (bond/spy (constantly nil))
+            physical-id-fn (constantly "elb:1234/something")]
+        (signal/instance-states-seq {:seq-fn seq-fn
+                                     :physical-id-fn physical-id-fn}
+                                    "example" "loadBalancer")
+        (is (= (-> (bond/calls seq-fn) first :args)
+               ["elb:1234/something"]))))
+
+    (testing "returns the result of seq-fn"
+      (let [seq-fn (constantly [{:instance-id "i-abc123"
+                                 :state "InService"}])
+            physical-id-fn (constantly nil)]
+        (is (= (signal/instance-states-seq {:seq-fn seq-fn
+                                             :physical-id-fn physical-id-fn}
+               "example" "loadBalancer")
+               [{:instance-id "i-abc123", :state "InService"}]))))))
+
 (deftest action-test
   (testing "#'action"
     (testing "without a <stack-name>"

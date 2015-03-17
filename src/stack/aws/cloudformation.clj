@@ -1,8 +1,9 @@
 (ns stack.aws.cloudformation
   (:require [clojure.data.json :as json]
-            [clojure.walk :refer [stringify-keys]])
-  (:import [com.amazonaws.services.cloudformation.model
-            AlreadyExistsException]))
+            [clojure.walk :refer [stringify-keys]]
+            [stack.util :as util])
+  (:import [com.amazonaws AmazonServiceException]
+           [com.amazonaws.services.cloudformation.model AlreadyExistsException]))
 
 (defn expand-parameters
   [params]
@@ -56,13 +57,9 @@
   (fn stack-events-seq
     [stack-name & {:keys [follow]}]
     (if follow
-      (->> (iterate inc 0)
-           (map (fn [i]
-                  (if (> i 1)
-                    (sleep-fn))
-                  (list-fn stack-name)))
-           flatten
-           distinct)
+      ((util/streaming-seq-fn
+         :seq-fn list-fn
+         :sleep-fn sleep-fn) stack-name)
       (list-fn stack-name))))
 
 (defn physical-resource-id-fn
@@ -76,3 +73,13 @@
       (-> response
           :stack-resource-detail
           :physical-resource-id))))
+
+(defn wait-for-resource-fn
+  "Wait for logical-id to exist on stack-name then return its physical-id."
+  [& {:keys [physical-id-fn sleep-fn]}]
+  (fn wait-for-resource
+    [stack-name logical-id]
+    (or (try (physical-id-fn stack-name logical-id)
+             (catch AmazonServiceException e))
+        (do (sleep-fn)
+            (recur stack-name logical-id)))))

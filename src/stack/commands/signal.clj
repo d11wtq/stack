@@ -32,20 +32,23 @@
   (util/make-validate-fn [validate-stack-name
                           validate-elb-asg]))
 
+(defn instance-states-seq
+  [{:keys [physical-id-fn seq-fn]} stack-name elb]
+  (seq-fn (physical-id-fn stack-name elb)))
 
-;; FIXME: Define two functions:
-;; 1. resource-id (blocks until resource exists)
-;; 2. instance-states-seq (depends on resource-id)
+;; FIXME: 1. Define report-instance-state, provide as HOF to #'action
+;;        2. Define #'cloudformation/signal-resource
 
 (defn action
   [{:keys [instance-states-fn signal-fn error-fn]} arguments options]
   (if-let [msg (validate-all arguments options)]
     (error-fn msg)
     (let [[stack-name elb-asg] arguments]
-      (instance-states-fn stack-name
-                          (-> elb-asg
-                              (string/split #":")
-                              first)))))
+      (doseq [s (instance-states-fn stack-name
+                                    (-> elb-asg
+                                        (string/split #":")
+                                        first))]
+        (println s)))))
 
 (defn dispatch
   [{:keys [parse-fn handler-fn]} & args]

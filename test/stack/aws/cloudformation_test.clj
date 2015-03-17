@@ -5,7 +5,8 @@
                                               deploy-stack-fn
                                               list-stack-events-fn
                                               stack-events-seq-fn
-                                              physical-resource-id-fn]])
+                                              physical-resource-id-fn
+                                              wait-for-resource-fn]])
   (:import [com.amazonaws.services.cloudformation.model
             AlreadyExistsException]))
 
@@ -109,3 +110,31 @@
         (is (= "physical-id"
                ((physical-resource-id-fn :stack-resource-fn stack-resource-fn)
                 "example" "logical-id")))))))
+
+(deftest wait-for-resource-test
+  (testing "#'wait-for-resource"
+    (testing "gets the physical-id of the resource"
+      (let [physical-id-fn (bond/spy (constantly "physical-id"))
+            sleep-fn (constantly nil)]
+        ((wait-for-resource-fn :physical-id-fn physical-id-fn
+                               :sleep-fn sleep-fn)
+         "example" "logical-id")
+        (is (= (-> (bond/calls physical-id-fn) first :args)
+               ["example" "logical-id"]))))
+
+    (testing "when the resource doesn't exist"
+      (let [values (atom (list nil nil "physical-id"))
+            physical-id-fn (fn [& args] (let [v (first @values)]
+                                          (swap! values pop)
+                                          v))
+            sleep-fn (bond/spy (constantly nil))]
+        (let [physical-id ((wait-for-resource-fn
+                             :physical-id-fn physical-id-fn
+                             :sleep-fn sleep-fn)
+                           "example" "logical-id")]
+
+          (testing "applies sleep-fn"
+            (is (= (-> (bond/calls sleep-fn) count) 2)))
+
+          (testing "retries until a value is returned"
+            (is (= "physical-id" physical-id))))))))

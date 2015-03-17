@@ -2,6 +2,7 @@
   (:require [stack.commands.help :as help]
             [stack.wiring.commands.deploy :as deploy]
             [stack.wiring.commands.events :as events]
+            [stack.wiring.commands.signal :as signal]
             [stack.util :as util]
             [clojure.tools.cli :refer [parse-opts]]))
 
@@ -9,7 +10,8 @@
   (partial help/action
            {:error-fn util/error-fn
             :subcommands [[:deploy deploy/dispatch
-                           :events events/dispatch]]}))
+                           :events events/dispatch
+                           :signal signal/dispatch]]}))
 
 (def handle-args
   (util/make-handler-fn

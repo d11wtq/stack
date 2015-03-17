@@ -26,3 +26,8 @@
 (def physical-resource-id
   (cloudformation/physical-resource-id-fn
     :stack-resource-fn describe-stack-resource))
+
+(def wait-for-resource
+  (cloudformation/wait-for-resource-fn
+    :physical-id-fn physical-resource-id
+    :sleep-fn #(Thread/sleep 5000)))
