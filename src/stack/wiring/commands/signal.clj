@@ -11,11 +11,17 @@
             :seq-fn (util/streaming-seq-fn
                       :seq-fn elasticloadbalancing/list-instance-states
                       :sleep-fn #(Thread/sleep 5000))}))
+
+(def handle-instance-state
+  (partial signal/handle-instance-state
+           {:report-fn signal/report-instance-state
+            :signal-fn (constantly nil)}))
+
 (def action
   (partial signal/action
            {:error-fn util/error-fn
             :instance-states-fn instance-states-seq
-            :signal-fn (constantly nil)}))
+            :handler-fn handle-instance-state}))
 
 (def handle-args
   (util/make-handler-fn

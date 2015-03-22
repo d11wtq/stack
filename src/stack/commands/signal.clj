@@ -36,11 +36,27 @@
   [{:keys [physical-id-fn seq-fn]} stack-name elb]
   (seq-fn (physical-id-fn stack-name elb)))
 
-;; FIXME: 1. Define report-instance-state, provide as HOF to #'action
-;;        2. Define #'cloudformation/signal-resource
+(defn report-instance-state
+  [{:keys [instance-id state]}]
+  (println "Instance"
+           instance-id
+           "is now"
+           state))
+
+(defn success?
+  [state]
+  (= "InService" state))
+
+(defn handle-instance-state
+  [{:keys [report-fn signal-fn]} stack-name asg-name state]
+  (report-fn state)
+  (if (success? (:state state))
+    (signal-fn stack-name
+               asg-name
+               (:instance-id state))))
 
 (defn action
-  [{:keys [instance-states-fn signal-fn error-fn]} arguments options]
+  [{:keys [instance-states-fn handler-fn error-fn]} arguments options]
   (if-let [msg (validate-all arguments options)]
     (error-fn msg)
     (let [[stack-name elb-asg] arguments]
@@ -48,7 +64,11 @@
                                     (-> elb-asg
                                         (string/split #":")
                                         first))]
-        (println s)))))
+        (handler-fn stack-name
+                    (-> elb-asg
+                        (string/split #":")
+                        last)
+                    s)))))
 
 (defn dispatch
   [{:keys [parse-fn handler-fn]} & args]

@@ -1,7 +1,54 @@
 (ns stack.commands.signal-test
   (:require [clojure.test :refer :all]
+            [clojure.string :as string]
             [bond.james :as bond]
             [stack.commands.signal :as signal]))
+
+(deftest report-instance-state-test
+  (testing "#'report-instance-state"
+    (testing "prints 'Instance <id> is now <state>'"
+      (let [output (with-out-str
+                     (signal/report-instance-state {:instance-id "i-abc123"
+                                                    :state "InService"}))]
+        (is (= "Instance i-abc123 is now InService"
+               (string/trim output)))))))
+
+(deftest handle-instance-state-test
+  (testing "#'handle-instance-state"
+    (testing "applies report-fn with the instance state"
+      (let [report-fn (bond/spy (constantly nil))
+            signal-fn (constantly nil)]
+        (signal/handle-instance-state {:report-fn report-fn
+                                       :signal-fn signal-fn}
+                                      "example" "asg"
+                                      {:instance-id "i-abc123"
+                                       :state "InService"})
+        (is (= (-> (bond/calls report-fn) first :args)
+               [{:instance-id "i-abc123"
+                 :state "InService"}])))
+
+      (testing "for an InService instance"
+        (testing "applies signal-fn for the ASG"
+          (let [report-fn (constantly nil)
+                signal-fn (bond/spy (constantly nil))]
+            (signal/handle-instance-state {:report-fn report-fn
+                                           :signal-fn signal-fn}
+                                          "example" "asg"
+                                          {:instance-id "i-abc123"
+                                           :state "InService"})
+            (is (= (-> (bond/calls signal-fn) first :args)
+                   ["example" "asg" "i-abc123"])))))
+
+      (testing "for an OutOfService instance"
+        (testing "does not apply signal-fn"
+          (let [report-fn (constantly nil)
+                signal-fn (bond/spy (constantly nil))]
+            (signal/handle-instance-state {:report-fn report-fn
+                                           :signal-fn signal-fn}
+                                          "example" "asg"
+                                          {:instance-id "i-abc123"
+                                           :state "OutOfService"})
+            (is (= (-> (bond/calls signal-fn) count) 0))))))))
 
 (deftest instance-states-seq-test
   (testing "#'instance-states-seq"
