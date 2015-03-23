@@ -2,6 +2,7 @@
   (:require [stack.aws.cloudformation :as cloudformation]
             [amazonica.aws.cloudformation :refer [create-stack
                                                   update-stack
+                                                  describe-stacks
                                                   describe-stack-events
                                                   describe-stack-resource
                                                   signal-resource]]))
@@ -36,3 +37,12 @@
 (def signal-resource-success
   (cloudformation/signal-resource-success-fn
     :signal-fn signal-resource))
+
+(def stack-status
+  (cloudformation/stack-status-fn
+    :describe-fn describe-stacks))
+
+(def wait-for-stack-update
+  (cloudformation/wait-for-stack-update-fn
+    :status-fn stack-status
+    :sleep-fn #(Thread/sleep 5000)))

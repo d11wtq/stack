@@ -92,4 +92,25 @@
     (signal-fn {:stack-name stack-name
                 :logical-resource-id resource-id
                 :status "SUCCESS"
-                :unique-id from-id })))
+                :unique-id from-id})))
+
+(defn stack-status-fn
+  "Get the status of stack-name."
+  [& {:keys [describe-fn]}]
+  (fn stack-status
+    [stack-name]
+    (let [response (describe-fn {:stack-name stack-name})]
+      (-> response
+          :stacks
+          first
+          :stack-status))))
+
+(defn wait-for-stack-update-fn
+  "Blocks until any update operation on stack completes."
+  [& {:keys [status-fn sleep-fn]}]
+  (fn wait-for-stack-update
+    [stack-name]
+    (let [complete? (partial re-find #"COMPLETE|FAILED$")]
+      (when-not (complete? (status-fn stack-name))
+        (sleep-fn)
+        (recur stack-name)))))
