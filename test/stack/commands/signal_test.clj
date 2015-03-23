@@ -141,12 +141,27 @@
       (testing "applies instance-states-fn with stack-name and elb"
         (let [error-fn (constantly nil)
               instance-states-fn (bond/spy (constantly nil))
-              signal-fn (constantly nil)]
+              handler-fn (constantly nil)]
           ((signal/action-fn
              :error-fn error-fn
              :instance-states-fn instance-states-fn
-             :signal-fn signal-fn)
+             :handler-fn handler-fn)
            ["example" "elbName:asgName"]
            (hash-map))
           (is (= (-> (bond/calls instance-states-fn) first :args)
-                 ["example" "elbName"])))))))
+                 ["example" "elbName"]))))
+
+      (testing "apples handler-fn for each instance state"
+        (let [error-fn (constantly nil)
+              instance-states-fn (constantly [{:instance-id "i-abc123"
+                                               :state "InService"}])
+              handler-fn (bond/spy (constantly nil))]
+          ((signal/action-fn
+             :error-fn error-fn
+             :instance-states-fn instance-states-fn
+             :handler-fn handler-fn)
+           ["example" "elbName:asgName"]
+           (hash-map))
+          (is (= (-> (bond/calls handler-fn) first :args)
+                 ["example" "asgName" {:instance-id "i-abc123"
+                                       :state "InService"}])))))))
