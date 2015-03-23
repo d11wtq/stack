@@ -3,7 +3,8 @@
             [amazonica.aws.cloudformation :refer [create-stack
                                                   update-stack
                                                   describe-stack-events
-                                                  describe-stack-resource]]))
+                                                  describe-stack-resource
+                                                  signal-resource]]))
 
 (def apply-stack
   (cloudformation/apply-stack-fn
@@ -31,3 +32,7 @@
   (cloudformation/wait-for-resource-fn
     :physical-id-fn physical-resource-id
     :sleep-fn #(Thread/sleep 5000)))
+
+(def signal-resource-success
+  (cloudformation/signal-resource-success-fn
+    :signal-fn signal-resource))

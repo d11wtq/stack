@@ -6,7 +6,8 @@
                                               list-stack-events-fn
                                               stack-events-seq-fn
                                               physical-resource-id-fn
-                                              wait-for-resource-fn]])
+                                              wait-for-resource-fn
+                                              signal-resource-success-fn]])
   (:import [com.amazonaws.services.cloudformation.model
             AlreadyExistsException]))
 
@@ -138,3 +139,15 @@
 
           (testing "retries until a value is returned"
             (is (= "physical-id" physical-id))))))))
+
+(deftest signal-resource-success-test
+  (testing "#'signal-resource"
+    (testing "sends a success signal to resource-id from from-id"
+      (let [signal-fn (bond/spy (constantly nil))]
+        ((signal-resource-success-fn :signal-fn signal-fn)
+         "example" "asg-name" "i-abc123")
+        (is (= (-> (bond/calls signal-fn) first :args)
+               [{:stack-name "example"
+                 :logical-resource-id "asg-name"
+                 :status "SUCCESS"
+                 :unique-id "i-abc123"}]))))))

@@ -15,7 +15,7 @@
 (def handle-instance-state
   (partial signal/handle-instance-state
            {:report-fn signal/report-instance-state
-            :signal-fn (constantly nil)}))
+            :signal-fn cloudformation/signal-resource-success}))
 
 (def action
   (partial signal/action

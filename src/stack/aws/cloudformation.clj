@@ -83,3 +83,13 @@
              (catch AmazonServiceException e))
         (do (sleep-fn)
             (recur stack-name logical-id)))))
+
+(defn signal-resource-success-fn
+  "Send a success signal to resource-id from from-id."
+  [& {:keys [signal-fn]}]
+  (fn signal-resource-success
+    [stack-name resource-id from-id]
+    (signal-fn {:stack-name stack-name
+                :logical-resource-id resource-id
+                :status "SUCCESS"
+                :unique-id from-id })))
