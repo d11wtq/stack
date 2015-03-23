@@ -32,9 +32,15 @@
   (util/make-validate-fn [validate-stack-name
                           validate-elb-asg]))
 
-(defn instance-states-seq
-  [{:keys [physical-id-fn seq-fn]} stack-name elb]
-  (seq-fn (physical-id-fn stack-name elb)))
+(defn success?
+  [state]
+  (= "InService" state))
+
+(defn instance-states-seq-fn
+  [& {:keys [seq-fn physical-id-fn]}]
+  (fn instance-states-seq
+    [stack-name elb-name]
+    (seq-fn (physical-id-fn stack-name elb-name))))
 
 (defn report-instance-state
   [{:keys [instance-id state]}]
@@ -43,33 +49,29 @@
            "is now"
            state))
 
-(defn success?
-  [state]
-  (= "InService" state))
+(defn handle-instance-state-fn
+  [& {:keys [report-fn signal-fn]}]
+  (fn handle-instance-state-fn
+    [stack-name asg-name state]
+    (report-fn state)
+    (if (success? (:state state))
+      (signal-fn stack-name
+                 asg-name
+                 (:instance-id state)))))
 
-(defn handle-instance-state
-  [{:keys [report-fn signal-fn]} stack-name asg-name state]
-  (report-fn state)
-  (if (success? (:state state))
-    (signal-fn stack-name
-               asg-name
-               (:instance-id state))))
-
-(defn action
-  [{:keys [instance-states-fn handler-fn error-fn]} arguments options]
-  (if-let [msg (validate-all arguments options)]
-    (error-fn msg)
-    (let [[stack-name elb-asg] arguments]
-      (doseq [s (instance-states-fn stack-name
-                                    (-> elb-asg
-                                        (string/split #":")
-                                        first))]
-        (handler-fn stack-name
-                    (-> elb-asg
-                        (string/split #":")
-                        last)
-                    s)))))
-
-(defn dispatch
-  [{:keys [parse-fn handler-fn]} & args]
-  (handler-fn (parse-fn args flags)))
+(defn action-fn
+  [& {:keys [instance-states-fn handler-fn error-fn]}]
+  (fn action
+    [arguments options]
+    (if-let [msg (validate-all arguments options)]
+      (error-fn msg)
+      (let [[stack-name elb-asg] arguments]
+        (doseq [s (instance-states-fn stack-name
+                                      (-> elb-asg
+                                          (string/split #":")
+                                          first))]
+          (handler-fn stack-name
+                      (-> elb-asg
+                          (string/split #":")
+                          last)
+                      s))))))

@@ -28,17 +28,15 @@
 
 (defn usage
   [summary]
-  summary)
+  (str "Usage: stack help [command]"))
 
-(defn action
-  [{:keys [subcommands error-fn]} [subcommand-name] options]
-  (if (nil? subcommand-name)
-    (println (full-usage subcommands))
-    (if-let [cmd (get (commands->map subcommands)
-                      (keyword subcommand-name))]
-      (cmd "--help")
-      (error-fn (str "No such command: " subcommand-name)))))
-
-(defn dispatch
-  [{:keys [parse-fn handler-fn]} & args]
-  (handler-fn (parse-fn args flags)))
+(defn action-fn
+  [& {:keys [subcommands error-fn]}]
+  (fn action
+    [[subcommand-name] options]
+    (if (nil? subcommand-name)
+      (println (full-usage subcommands))
+      (if-let [cmd (get (commands->map subcommands)
+                        (keyword subcommand-name))]
+        (cmd "--help")
+        (error-fn (str "No such command: " subcommand-name))))))

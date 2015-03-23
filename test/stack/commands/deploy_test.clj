@@ -36,10 +36,11 @@
       (testing "applies error-fn"
         (let [error-fn (bond/spy (constantly nil))
               deploy-fn (constantly nil)]
-          (deploy/action {:error-fn error-fn
-                          :deploy-fn deploy-fn}
-                         (vector)
-                         (hash-map))
+          ((deploy/action-fn
+             :error-fn error-fn
+             :deploy-fn deploy-fn)
+           (vector)
+           (hash-map))
           (is (re-find #"<stack-name>"
                        (-> (bond/calls error-fn)
                            first
@@ -50,10 +51,11 @@
       (testing "applies error-fn"
         (let [error-fn (bond/spy (constantly nil))
               deploy-fn (constantly nil)]
-          (deploy/action {:error-fn error-fn
-                          :deploy-fn deploy-fn}
-                         ["example-stack"]
-                         (hash-map))
+          ((deploy/action-fn
+             :error-fn error-fn
+             :deploy-fn deploy-fn)
+           ["example-stack"]
+           (hash-map))
           (is (re-find #"<template>"
                        (-> (bond/calls error-fn)
                            first
@@ -65,10 +67,11 @@
         (testing "applies deploy-fn with empty params"
           (let [error-fn (constantly nil)
                 deploy-fn (bond/spy (constantly nil))]
-            (deploy/action {:error-fn error-fn
-                            :deploy-fn deploy-fn}
-                           ["example-stack" sample-template-path]
-                           (hash-map))
+            ((deploy/action-fn
+               :error-fn error-fn
+               :deploy-fn deploy-fn)
+             ["example-stack" sample-template-path]
+             (hash-map))
             (is (= (-> (bond/calls deploy-fn) first :args)
                    ["example-stack"
                     sample-template
@@ -78,10 +81,11 @@
         (testing "applies deploy-fn with file contents"
           (let [error-fn (constantly nil)
                 deploy-fn (bond/spy (constantly nil))]
-            (deploy/action {:error-fn error-fn
-                            :deploy-fn deploy-fn}
-                           ["example-stack" sample-template-path]
-                           {:params sample-params-path})
+            ((deploy/action-fn
+               :error-fn error-fn
+               :deploy-fn deploy-fn)
+             ["example-stack" sample-template-path]
+             {:params sample-params-path})
             (is (= (-> (bond/calls deploy-fn) first :args)
                    ["example-stack"
                     sample-template
@@ -91,12 +95,13 @@
         (testing "applies deploy-fn with merged params"
           (let [error-fn (constantly nil)
                 deploy-fn (bond/spy (constantly nil))]
-            (deploy/action {:error-fn error-fn
-                            :deploy-fn deploy-fn}
-                           ["example-stack"
-                            sample-template-path
-                            "hostPort=81"]
-                           {:params sample-params-path})
+            ((deploy/action-fn
+               :error-fn error-fn
+               :deploy-fn deploy-fn)
+             ["example-stack"
+              sample-template-path
+              "hostPort=81"]
+             {:params sample-params-path})
             (is (= (-> (bond/calls deploy-fn) first :args)
                    ["example-stack"
                     sample-template
@@ -107,12 +112,13 @@
           (testing "applies error-fn"
             (let [error-fn (bond/spy (constantly nil))
                   deploy-fn (constantly nil)]
-              (deploy/action {:error-fn error-fn
-                              :deploy-fn deploy-fn}
-                             ["example-stack"
-                              sample-template-path
-                              "hostPort" " =81"]
-                             {:params sample-params-path})
+              ((deploy/action-fn
+                 :error-fn error-fn
+                 :deploy-fn deploy-fn)
+               ["example-stack"
+                sample-template-path
+                "hostPort" " =81"]
+               {:params sample-params-path})
               (is (re-find #"hostPort"
                            (-> (bond/calls error-fn)
                                first

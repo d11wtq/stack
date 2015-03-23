@@ -3,15 +3,14 @@
             [stack.wiring.commands.deploy :as deploy]
             [stack.wiring.commands.events :as events]
             [stack.wiring.commands.signal :as signal]
-            [stack.util :as util]
-            [clojure.tools.cli :refer [parse-opts]]))
+            [stack.util :as util]))
 
 (def action
-  (partial help/action
-           {:error-fn util/error-fn
-            :subcommands [[:deploy deploy/dispatch
-                           :events events/dispatch
-                           :signal signal/dispatch]]}))
+  (help/action-fn
+    :error-fn util/error-fn
+    :subcommands [[:deploy deploy/dispatch
+                   :events events/dispatch
+                   :signal signal/dispatch]]))
 
 (def handle-args
   (util/make-handler-fn
@@ -20,6 +19,6 @@
      :usage-fn (util/make-print-usage-fn help/usage)}))
 
 (def dispatch
-  (partial help/dispatch
-           {:parse-fn parse-opts
-            :handler-fn handle-args}))
+  (util/make-dispatch-fn
+    :flags help/flags
+    :handler-fn handle-args))

@@ -1,13 +1,12 @@
 (ns stack.wiring.commands.deploy
   (:require [stack.commands.deploy :as deploy]
             [stack.util :as util]
-            [stack.wiring.aws.cloudformation :as cloudformation]
-            [clojure.tools.cli :refer [parse-opts]]))
+            [stack.wiring.aws.cloudformation :as cloudformation]))
 
 (def action
-  (partial deploy/action
-           {:error-fn util/error-fn
-            :deploy-fn cloudformation/deploy-stack}))
+  (deploy/action-fn
+    :error-fn util/error-fn
+    :deploy-fn cloudformation/deploy-stack))
 
 (def handle-args
   (util/make-handler-fn
@@ -16,6 +15,6 @@
      :usage-fn (util/make-print-usage-fn deploy/usage)}))
 
 (def dispatch
-  (partial deploy/dispatch
-           {:parse-fn parse-opts
-            :handler-fn handle-args}))
+  (util/make-dispatch-fn
+    :flags deploy/flags
+    :handler-fn handle-args))

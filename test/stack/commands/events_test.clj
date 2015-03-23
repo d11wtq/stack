@@ -23,11 +23,12 @@
         (let [error-fn (bond/spy (constantly nil))
               events-fn (constantly nil)
               report-fn (constantly nil)]
-          (events/action {:error-fn error-fn
-                          :events-fn events-fn
-                          :report-fn report-fn}
-                         (vector)
-                         (hash-map))
+          ((events/action-fn
+             :error-fn error-fn
+             :events-fn events-fn
+             :report-fn report-fn)
+           (vector)
+           (hash-map))
           (is (re-find #"<stack-name>"
                        (-> (bond/calls error-fn)
                            first
@@ -40,11 +41,12 @@
           (let [error-fn (constantly nil)
                 events-fn (bond/spy (constantly nil))
                 report-fn (constantly nil)]
-            (events/action {:error-fn error-fn
-                            :events-fn events-fn
-                            :report-fn report-fn}
-                           ["example-stack"]
-                           {:follow false})
+            ((events/action-fn
+               :error-fn error-fn
+               :events-fn events-fn
+               :report-fn report-fn)
+             ["example-stack"]
+             {:follow false})
             (is (= (-> (bond/calls events-fn) first :args)
                    ["example-stack" :follow false]))))
 
@@ -54,10 +56,11 @@
                 error-fn (constantly nil)
                 events-fn (constantly [event-1 event-2])
                 report-fn (bond/spy (constantly nil))]
-            (events/action {:error-fn error-fn
-                            :events-fn events-fn
-                            :report-fn report-fn}
-                           ["example-stack"]
-                           {:follow false})
+            ((events/action-fn
+               :error-fn error-fn
+               :events-fn events-fn
+               :report-fn report-fn)
+             ["example-stack"]
+             {:follow false})
             (is (= (->> (bond/calls report-fn) (map :args))
                    [[event-1] [event-2]]))))))))

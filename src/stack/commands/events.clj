@@ -32,15 +32,13 @@
 (def validate-all
   (util/make-validate-fn [validate-stack-name]))
 
-(defn action
-  [{:keys [events-fn report-fn error-fn]} arguments options]
-  (if-let [msg (validate-all arguments options)]
-    (error-fn msg)
-    (let [[stack-name] arguments
-          {:keys [follow]} options]
-      (doseq [evt (events-fn stack-name :follow follow)]
-        (report-fn evt)))))
-
-(defn dispatch
-  [{:keys [parse-fn handler-fn]} & args]
-  (handler-fn (parse-fn args flags)))
+(defn action-fn
+  [& {:keys [events-fn report-fn error-fn]}]
+  (fn action
+    [arguments options]
+    (if-let [msg (validate-all arguments options)]
+      (error-fn msg)
+      (let [[stack-name] arguments
+            {:keys [follow]} options]
+        (doseq [evt (events-fn stack-name :follow follow)]
+          (report-fn evt))))))

@@ -1,4 +1,5 @@
-(ns stack.util)
+(ns stack.util
+  (:require [clojure.tools.cli :as cli]))
 
 (defn error-fn
   "Handle an error by throwing an Exception."
@@ -27,6 +28,13 @@
   (fn [arguments options]
     (some #(% arguments options)
           validators)))
+
+(defn make-dispatch-fn
+  "Make a command dispatcher function using handler-fn."
+  [& {:keys [handler-fn flags]}]
+  (fn dispatch
+    [& args]
+    (handler-fn (cli/parse-opts args flags))))
 
 (defn streaming-seq-fn
   "Continually apply seq-fn to make an infinite lazy-seq of distinct entries."

@@ -53,16 +53,14 @@
                  (slurp-json path))]
     (merge params overrides)))
 
-(defn action
-  [{:keys [deploy-fn error-fn]} arguments options]
-  (if-let [msg (validate-all arguments options)]
-    (error-fn msg)
-    (let [[stack-name template & keys=values] arguments
-          {:keys [params]} options]
-      (deploy-fn stack-name
-                 (slurp-json template)
-                 (merge-params params keys=values)))))
-
-(defn dispatch
-  [{:keys [parse-fn handler-fn]} & args]
-  (handler-fn (parse-fn args flags)))
+(defn action-fn
+  [& {:keys [deploy-fn error-fn]}]
+  (fn action
+    [arguments options]
+    (if-let [msg (validate-all arguments options)]
+      (error-fn msg)
+      (let [[stack-name template & keys=values] arguments
+            {:keys [params]} options]
+        (deploy-fn stack-name
+                   (slurp-json template)
+                   (merge-params params keys=values))))))

@@ -2,26 +2,28 @@
   (:require [stack.commands.signal :as signal]
             [stack.util :as util]
             [stack.wiring.aws.cloudformation :as cloudformation]
-            [stack.wiring.aws.elasticloadbalancing :as elasticloadbalancing]
-            [clojure.tools.cli :refer [parse-opts]]))
+            [stack.wiring.aws.elasticloadbalancing :as elasticloadbalancing]))
+
+(def seq-fn
+  (util/streaming-seq-fn
+    :seq-fn elasticloadbalancing/list-instance-states
+    :sleep-fn #(Thread/sleep 5000)))
 
 (def instance-states-seq
-  (partial signal/instance-states-seq
-           {:physical-id-fn cloudformation/wait-for-resource
-            :seq-fn (util/streaming-seq-fn
-                      :seq-fn elasticloadbalancing/list-instance-states
-                      :sleep-fn #(Thread/sleep 5000))}))
+  (signal/instance-states-seq-fn
+    :physical-id-fn cloudformation/wait-for-resource
+    :seq-fn seq-fn))
 
 (def handle-instance-state
-  (partial signal/handle-instance-state
-           {:report-fn signal/report-instance-state
-            :signal-fn cloudformation/signal-resource-success}))
+  (signal/handle-instance-state-fn
+    :report-fn signal/report-instance-state
+    :signal-fn cloudformation/signal-resource-success))
 
 (def action
-  (partial signal/action
-           {:error-fn util/error-fn
-            :instance-states-fn instance-states-seq
-            :handler-fn handle-instance-state}))
+  (signal/action-fn
+    :error-fn util/error-fn
+    :instance-states-fn instance-states-seq
+    :handler-fn handle-instance-state))
 
 (def handle-args
   (util/make-handler-fn
@@ -30,6 +32,6 @@
      :usage-fn (util/make-print-usage-fn signal/usage)}))
 
 (def dispatch
-  (partial signal/dispatch
-           {:parse-fn parse-opts
-            :handler-fn handle-args}))
+  (util/make-dispatch-fn
+    :flags signal/flags
+    :handler-fn handle-args))
