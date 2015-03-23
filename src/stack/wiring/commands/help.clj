@@ -8,9 +8,9 @@
 (def action
   (help/action-fn
     :error-fn util/error-fn
-    :subcommands [[:deploy deploy/dispatch
-                   :events events/dispatch
-                   :signal signal/dispatch]]))
+    :subcommands [[:deploy deploy/dispatch]
+                  [:events events/dispatch]
+                  [:signal signal/dispatch]]))
 
 (def handle-args
   (util/make-handler-fn
