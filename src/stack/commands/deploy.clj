@@ -8,7 +8,9 @@
   [["-h" "--help"
     "Show this usage info"]
    ["-p" "--params FILE"
-    "Read stack parameters from FILE"]])
+    "Read stack parameters from FILE"]
+   ["-s" "--signal ELB:ASG"
+    "Signal ASG using instances on ELB"]])
 
 (defn usage
   [summary]
@@ -53,14 +55,51 @@
                  (slurp-json path))]
     (merge params overrides)))
 
+(defn dispatch-events-fn
+  [& {:keys [events-fn]}]
+  (fn dispatch-events
+    [arguments options]
+    (events-fn (first arguments)
+               "--follow")))
+
+(defn dispatch-signal-fn
+  [& {:keys [signal-fn]}]
+  (fn dispatch-signal
+    [arguments options]
+    (if (:signal options)
+      (signal-fn (first arguments)
+                 (:signal options)))))
+
+(defn dispatch-wait-fn
+  [& {:keys [wait-fn]}]
+  (fn dispatch-wait
+    [arguments options]
+    (wait-fn (first arguments))))
+
+(defn dispatch-parallel-actions-fn
+  [& {:keys [actions]}]
+  (fn dispatch-parallel-actions
+    [arguments options]
+    (let [done (promise)
+          acts (doall (map #(future
+                              (try
+                                (deliver done [:ok (% arguments options)])
+                                (catch Exception e
+                                  (deliver done [:err e]))))
+                           actions))]
+      (let [[tag v] @done]
+        (case tag
+          :ok (doall (map future-cancel acts))
+          :err (throw v))))))
+
 (defn action-fn
-  [& {:keys [deploy-fn error-fn]}]
+  [& {:keys [deploy-fn after-fn error-fn]}]
   (fn action
     [arguments options]
     (if-let [msg (validate-all arguments options)]
       (error-fn msg)
-      (let [[stack-name template & keys=values] arguments
-            {:keys [params]} options]
+      (let [[stack-name template & keys=values] arguments]
         (deploy-fn stack-name
                    (slurp-json template)
-                   (merge-params params keys=values))))))
+                   (merge-params (:params options) keys=values))
+        (after-fn arguments options)))))
