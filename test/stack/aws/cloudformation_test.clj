@@ -10,7 +10,8 @@
                                               wait-for-resource-fn
                                               wait-for-stack-update-fn
                                               signal-resource-success-fn]])
-  (:import [com.amazonaws.services.cloudformation.model
+  (:import [com.amazonaws AbortedException]
+           [com.amazonaws.services.cloudformation.model
             AlreadyExistsException]))
 
 (deftest apply-stack-test
@@ -64,7 +65,17 @@
                           {:stack-events [:f :e :d]
                            :next-token "test-token"}))]
         (is (= [:a :b :c :d :e :f]
-               ((list-stack-events-fn :events-fn events-fn) "example")))))))
+               ((list-stack-events-fn :events-fn events-fn) "example")))))
+
+    (testing "when an AbortedException occurs"
+      (testing "returns events seen so far"
+        (let [events-fn (fn [{:keys [next-token]}]
+                          (if (= "test-token" next-token)
+                            (throw (AbortedException.))
+                            {:stack-events [:f :e :d]
+                             :next-token "test-token"}))]
+          (is (= [:d :e :f]
+                 ((list-stack-events-fn :events-fn events-fn) "example"))))))))
 
 (deftest stack-events-seq-test
   (testing "#'stack-events-seq"

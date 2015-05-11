@@ -2,8 +2,11 @@
   (:require [clojure.data.json :as json]
             [clojure.walk :refer [stringify-keys]]
             [stack.util :as util])
-  (:import [com.amazonaws AmazonServiceException]
-           [com.amazonaws.services.cloudformation.model AlreadyExistsException]))
+  (:import [com.amazonaws
+            AmazonServiceException
+            AbortedException]
+           [com.amazonaws.services.cloudformation.model
+            AlreadyExistsException]))
 
 (defn expand-parameters
   [params]
@@ -42,10 +45,12 @@
     ([stack-name seen next-token]
      (let [payload {:stack-name stack-name
                     :next-token next-token}
-           response (events-fn
-                      (if (nil? next-token)
-                        (select-keys payload [:stack-name])
-                        payload))
+           response (try
+                      (events-fn
+                        (if (nil? next-token)
+                          (select-keys payload [:stack-name])
+                          payload))
+                      (catch AbortedException e))
            new-seen (concat seen (:stack-events response))]
        (if-let [new-next-token (:next-token response)]
          (recur stack-name new-seen new-next-token)
