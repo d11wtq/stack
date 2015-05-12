@@ -6,7 +6,9 @@
   [["-h" "--help"
     "Show this usage info"]
    ["-f" "--follow"
-    "Keep polling for new events"]])
+    "Keep polling for new events"]
+   ["-u" "--update"
+    "Used with --follow, stops polling once update complete"]])
 
 (defn usage
   [summary]
@@ -39,6 +41,8 @@
     (if-let [msg (validate-all arguments options)]
       (error-fn msg)
       (let [[stack-name] arguments
-            {:keys [follow]} options]
-        (doseq [evt (events-fn stack-name :follow follow)]
+            {:keys [follow update]} options]
+        (doseq [evt (events-fn stack-name
+                               :follow follow
+                               :update update)]
           (report-fn evt))))))

@@ -46,9 +46,9 @@
                :events-fn events-fn
                :report-fn report-fn)
              ["example-stack"]
-             {:follow false})
+             {:follow false, :update false})
             (is (= (-> (bond/calls events-fn) first :args)
-                   ["example-stack" :follow false]))))
+                   ["example-stack" :follow false, :update false]))))
 
         (testing "applies report-fn for each event"
           (let [event-1 {:timestamp "2015-01-01T00:00:00Z"}
@@ -61,6 +61,6 @@
                :events-fn events-fn
                :report-fn report-fn)
              ["example-stack"]
-             {:follow false})
+             {:follow false, :update false})
             (is (= (->> (bond/calls report-fn) (map :args))
                    [[event-1] [event-2]]))))))))

@@ -31,7 +31,8 @@
             (error-fn (str "Unknown command: " cmd-name)))
           (catch Exception e
             (binding [*out* *err*] (println (.getMessage e)))
-            (System/exit 1)))))))
+            (System/exit 1))
+          (finally (shutdown-agents)))))))
 
 (def -main
   (make-dispatch-fn

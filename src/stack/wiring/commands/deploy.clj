@@ -13,15 +13,10 @@
   (deploy/dispatch-signal-fn
     :signal-fn signal/dispatch))
 
-(def dispatch-wait
-  (deploy/dispatch-wait-fn
-    :wait-fn cloudformation/wait-for-stack-update))
-
 (def dispatch-parallel-actions
   (deploy/dispatch-parallel-actions-fn
     :actions [dispatch-events
-              dispatch-signal
-              dispatch-wait]))
+              dispatch-signal]))
 
 (def action
   (deploy/action-fn

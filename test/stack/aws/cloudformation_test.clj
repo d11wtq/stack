@@ -8,7 +8,6 @@
                                               stack-events-seq-fn
                                               physical-resource-id-fn
                                               wait-for-resource-fn
-                                              wait-for-stack-update-fn
                                               signal-resource-success-fn]])
   (:import [com.amazonaws AbortedException]
            [com.amazonaws.services.cloudformation.model
@@ -180,47 +179,3 @@
         (is (= ((stack-status-fn :describe-fn describe-fn)
                 "example")
                "UPDATE_IN_PROGRESS"))))))
-
-(deftest wait-for-stack-update
-  (testing "#'wait-for-stack-update"
-    (testing "applies status-fn with stack-name"
-      (let [status-fn (bond/spy (constantly "UPDATE_COMPLETE"))
-            sleep-fn (constantly nil)]
-        ((wait-for-stack-update-fn
-           :status-fn status-fn
-           :sleep-fn sleep-fn)
-         "example")
-        (is (= (-> (bond/calls status-fn) first :args)
-               ["example"]))))
-
-    (testing "when the status is complete"
-      (testing "returns"
-        (let [status-fn (constantly "UPDATE_ROLLBACK_COMPLETE")
-              sleep-fn (constantly nil)]
-          ((wait-for-stack-update-fn
-             :status-fn status-fn
-             :sleep-fn sleep-fn)
-           "example"))))
-
-    (testing "when the status is failed"
-      (testing "returns"
-        (let [status-fn (constantly "CREATE_FAILED")
-              sleep-fn (constantly nil)]
-          ((wait-for-stack-update-fn
-             :status-fn status-fn
-             :sleep-fn sleep-fn)
-           "example"))))
-
-    (testing "when the status is in progress"
-      (testing "sleeps and recurs"
-        (let [statuses (atom (list "UPDATE_IN_PROGRESS" "UPDATE_COMPLETE"))
-              status-fn (fn [& args]
-                          (let [v (first @statuses)]
-                            (swap! statuses pop)
-                            v))
-              sleep-fn (bond/spy (constantly nil))]
-          ((wait-for-stack-update-fn
-             :status-fn status-fn
-             :sleep-fn sleep-fn)
-           "example")
-          (is (= (-> (bond/calls sleep-fn) count) 1)))))))

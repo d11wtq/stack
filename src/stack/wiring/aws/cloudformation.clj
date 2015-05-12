@@ -16,6 +16,10 @@
   (cloudformation/deploy-stack-fn
     :apply-fn apply-stack))
 
+(def stack-status
+  (cloudformation/stack-status-fn
+    :describe-fn describe-stacks))
+
 (def list-stack-events
   (cloudformation/list-stack-events-fn
     :events-fn describe-stack-events))
@@ -23,6 +27,7 @@
 (def stack-events-seq
   (cloudformation/stack-events-seq-fn
     :list-fn list-stack-events
+    :status-fn stack-status
     :sleep-fn #(Thread/sleep 5000)))
 
 (def physical-resource-id
@@ -37,12 +42,3 @@
 (def signal-resource-success
   (cloudformation/signal-resource-success-fn
     :signal-fn signal-resource))
-
-(def stack-status
-  (cloudformation/stack-status-fn
-    :describe-fn describe-stacks))
-
-(def wait-for-stack-update
-  (cloudformation/wait-for-stack-update-fn
-    :status-fn stack-status
-    :sleep-fn #(Thread/sleep 5000)))

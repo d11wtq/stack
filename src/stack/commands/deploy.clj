@@ -58,39 +58,56 @@
 (defn dispatch-events-fn
   [& {:keys [events-fn]}]
   (fn dispatch-events
-    [arguments options]
-    (events-fn (first arguments)
-               "--follow")))
+    ([[arguments options]]
+     (dispatch-events arguments options))
+    ([arguments options]
+     (events-fn (first arguments)
+                "--follow"
+                "--update"))))
 
 (defn dispatch-signal-fn
   [& {:keys [signal-fn]}]
   (fn dispatch-signal
-    [arguments options]
-    (if (:signal options)
-      (signal-fn (first arguments)
-                 (:signal options)))))
+    ([[arguments options]]
+     (dispatch-signal arguments options))
+    ([arguments options]
+     (if (:signal options)
+       (signal-fn (first arguments)
+                  (:signal options))))))
 
-(defn dispatch-wait-fn
-  [& {:keys [wait-fn]}]
-  (fn dispatch-wait
-    [arguments options]
-    (wait-fn (first arguments))))
+(defn make-futures
+  [actions args done]
+  (map (fn [f]
+         (future
+           (try
+             (f args)
+             (catch Exception e
+               (deliver done [:err e])))))
+       actions))
+
+(defn wait-for-futures
+  [futs done]
+  (future
+    (doseq [f futs]
+      (try
+        (deref f)
+        (catch Exception e
+          (deliver done [:err e]))))
+    (deliver done [:ok]))
+
+  (let [[status e] @done]
+    (case status
+      :ok nil
+      :err (throw e))))
 
 (defn dispatch-parallel-actions-fn
   [& {:keys [actions]}]
   (fn dispatch-parallel-actions
-    [arguments options]
-    (let [done (promise)
-          acts (doall (map #(future
-                              (try
-                                (deliver done [:ok (% arguments options)])
-                                (catch Exception e
-                                  (deliver done [:err e]))))
-                           actions))]
-      (let [[tag v] @done]
-        (case tag
-          :ok (doall (map future-cancel acts))
-          :err (throw v))))))
+    [& args]
+    (let [done (promise)]
+      (wait-for-futures
+        (make-futures actions args done)
+        done))))
 
 (defn action-fn
   [& {:keys [deploy-fn after-fn error-fn]}]

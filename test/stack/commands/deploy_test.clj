@@ -32,12 +32,12 @@
 
 (deftest dispatch-events-test
   (testing "#'dispatch-events"
-    (testing "applies events-fn with stack-name --follow"
+    (testing "applies events-fn with stack-name --follow --update"
       (let [events-fn (bond/spy (constantly nil))]
         ((deploy/dispatch-events-fn :events-fn events-fn)
          ["example" "template.json"] {:params "params.json"})
         (is (= (-> (bond/calls events-fn) first :args)
-               ["example" "--follow"]))))))
+               ["example" "--follow" "--update"]))))))
 
 (deftest dispatch-signal-test
   (testing "#'dispatch-signal"
@@ -56,15 +56,6 @@
           (is (= (-> (bond/calls signal-fn) first :args)
                  ["example" "elb:asg"])))))))
 
-(deftest dispatch-wait-test
-  (testing "#'dispatch-wait"
-    (testing "applies wait-fn with stack-name"
-      (let [wait-fn (bond/spy (constantly nil))]
-        ((deploy/dispatch-wait-fn :wait-fn wait-fn)
-         ["example" "template.json"] (hash-map))
-        (is (= (-> (bond/calls wait-fn) first :args)
-               ["example"]))))))
-
 (deftest dispatch-parallel-actions-test
   (testing "#'dispatch-parallel-actions"
     (testing "applies each action"
@@ -73,18 +64,12 @@
         ((deploy/dispatch-parallel-actions-fn
            :actions [action-a action-b])
          ["example" "stack.json"] {:params "params.json"})
-        (is (= (->> (bond/calls action-a) first :args)
-               [["example" "stack.json"]
-                {:params "params.json"}])))
 
-      (let [action-a (bond/spy (fn [& args] (Thread/sleep 500)))
-            action-b (bond/spy (constantly nil))]
-        ((deploy/dispatch-parallel-actions-fn
-           :actions [action-a action-b])
-         ["example" "stack.json"] {:params "params.json"})
-        (is (= (->> (bond/calls action-b) first :args)
-               [["example" "stack.json"]
-                {:params "params.json"}]))))
+        (are [f] (= (->> (bond/calls f) first :args)
+                    [[["example" "stack.json"]
+                      {:params "params.json"}]])
+             action-a
+             action-b)))
 
     (testing "on error"
       (testing "throws the error"

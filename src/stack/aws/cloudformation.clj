@@ -58,14 +58,17 @@
 
 (defn stack-events-seq-fn
   "Get a (optionally) infinite lazy-seq of events for stack-name."
-  [& {:keys [list-fn sleep-fn]}]
+  [& {:keys [list-fn status-fn sleep-fn]}]
   (fn stack-events-seq
-    [stack-name & {:keys [follow]}]
-    (if follow
-      ((util/streaming-seq-fn
-         :seq-fn list-fn
-         :sleep-fn sleep-fn) stack-name)
-      (list-fn stack-name))))
+    [stack-name & {:keys [follow update]}]
+    ((util/streaming-seq-fn
+       :seq-fn list-fn
+       :more-fn (if (and follow update)
+                  (fn []
+                    (not (re-find #"(COMPLETE|FAILED)$"
+                                  (status-fn stack-name))))
+                  (constantly follow))
+       :sleep-fn sleep-fn) stack-name)))
 
 (defn physical-resource-id-fn
   "Get the physical-resource-id from logical-resource-id in stack-name."
@@ -109,13 +112,3 @@
           :stacks
           first
           :stack-status))))
-
-(defn wait-for-stack-update-fn
-  "Blocks until any update operation on stack completes."
-  [& {:keys [status-fn sleep-fn]}]
-  (fn wait-for-stack-update
-    [stack-name]
-    (let [complete? (partial re-find #"COMPLETE|FAILED$")]
-      (when-not (complete? (status-fn stack-name))
-        (sleep-fn)
-        (recur stack-name)))))

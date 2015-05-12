@@ -36,11 +36,19 @@
     [& args]
     (handler-fn (cli/parse-opts args flags))))
 
+(defn iterate-while
+  "Like iterate, but takes a predicate to determine when to stop."
+  [pred f v]
+  (let [more (pred)]
+    (cons v (lazy-seq (if more
+                        (iterate-while pred f (f v))
+                        (list))))))
+
 (defn streaming-seq-fn
   "Continually apply seq-fn to make an infinite lazy-seq of distinct entries."
-  [& {:keys [seq-fn sleep-fn]}]
+  [& {:keys [seq-fn more-fn sleep-fn]}]
   (fn [& args]
-    (->> (iterate inc 0)
+    (->> (iterate-while more-fn inc 0)
          (map (fn [i]
                 (if (> i 1)
                   (sleep-fn))

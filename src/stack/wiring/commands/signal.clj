@@ -7,6 +7,7 @@
 (def seq-fn
   (util/streaming-seq-fn
     :seq-fn elasticloadbalancing/list-instance-states
+    :more-fn (constantly true)
     :sleep-fn #(Thread/sleep 5000)))
 
 (def instance-states-seq
