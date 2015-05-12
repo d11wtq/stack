@@ -4,16 +4,11 @@
             [stack.wiring.aws.cloudformation :as cloudformation]
             [stack.wiring.aws.elasticloadbalancing :as elasticloadbalancing]))
 
-(def seq-fn
-  (util/streaming-seq-fn
-    :seq-fn elasticloadbalancing/list-instance-states
-    :more-fn (constantly true)
-    :sleep-fn #(Thread/sleep 5000)))
-
 (def instance-states-seq
   (signal/instance-states-seq-fn
     :physical-id-fn cloudformation/wait-for-resource
-    :seq-fn seq-fn))
+    :status-fn cloudformation/stack-status
+    :seq-fn elasticloadbalancing/list-instance-states))
 
 (def handle-instance-state
   (signal/handle-instance-state-fn

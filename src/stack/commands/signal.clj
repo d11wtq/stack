@@ -5,7 +5,9 @@
 (def flags
   "Supported command line flags"
   [["-h" "--help"
-    "Show this usage info"]])
+    "Show this usage info"]
+   ["-u" "--update"
+    "Stop once the stack update completes"]])
 
 (defn usage
   [summary]
@@ -37,10 +39,18 @@
   (= "InService" state))
 
 (defn instance-states-seq-fn
-  [& {:keys [seq-fn physical-id-fn]}]
+  [& {:keys [seq-fn status-fn physical-id-fn]}]
   (fn instance-states-seq
-    [stack-name elb-name]
-    (seq-fn (physical-id-fn stack-name elb-name))))
+    [stack-name elb-name & {:keys [update]}]
+    ((util/streaming-seq-fn
+       :seq-fn seq-fn
+       :more-fn (if update
+                  (fn []
+                    (not (re-find #"(COMPLETE|FAILED)$"
+                                  (status-fn stack-name))))
+                  (constantly true))
+       :sleep-fn #(Thread/sleep 5000))
+     (physical-id-fn stack-name elb-name))))
 
 (defn report-instance-state
   [{:keys [instance-id state]}]
@@ -69,7 +79,8 @@
         (doseq [s (instance-states-fn stack-name
                                       (-> elb-asg
                                           (string/split #":")
-                                          first))]
+                                          first)
+                                      :update (:update options))]
           (handler-fn stack-name
                       (-> elb-asg
                           (string/split #":")

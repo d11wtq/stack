@@ -56,32 +56,44 @@
   (testing "#'instance-states-seq"
     (testing "applies physical-id-fn with stack-name and elb"
       (let [seq-fn (constantly nil)
+            status-fn (constantly "UPDATE_COMPLETE")
             physical-id-fn (bond/spy (constantly nil))]
         ((signal/instance-states-seq-fn
-          :seq-fn seq-fn
-          :physical-id-fn physical-id-fn)
-         "example" "loadBalancer")
+           :seq-fn seq-fn
+           :status-fn status-fn
+           :physical-id-fn physical-id-fn)
+         "example"
+         "loadBalancer"
+         :update true)
         (is (= (-> (bond/calls physical-id-fn) first :args)
                ["example" "loadBalancer"]))))
 
     (testing "applies seq-fn with the result of physical-id-fn"
       (let [seq-fn (bond/spy (constantly nil))
+            status-fn (constantly "UPDATE_COMPLETE")
             physical-id-fn (constantly "elb:1234/something")]
         ((signal/instance-states-seq-fn
            :seq-fn seq-fn
+           :status-fn status-fn
            :physical-id-fn physical-id-fn)
-         "example" "loadBalancer")
+         "example"
+         "loadBalancer"
+         :update true)
         (is (= (-> (bond/calls seq-fn) first :args)
                ["elb:1234/something"]))))
 
     (testing "returns the result of seq-fn"
       (let [seq-fn (constantly [{:instance-id "i-abc123"
                                  :state "InService"}])
+            status-fn (constantly "UPDATE_COMPLETE")
             physical-id-fn (constantly nil)]
         (is (= ((signal/instance-states-seq-fn
                   :seq-fn seq-fn
+                  :status-fn status-fn
                   :physical-id-fn physical-id-fn)
-                "example" "loadBalancer")
+                "example"
+                "loadBalancer"
+                :update true)
                [{:instance-id "i-abc123", :state "InService"}]))))))
 
 (deftest action-test
@@ -147,9 +159,9 @@
              :instance-states-fn instance-states-fn
              :handler-fn handler-fn)
            ["example" "elbName:asgName"]
-           (hash-map))
+           {:update false})
           (is (= (-> (bond/calls instance-states-fn) first :args)
-                 ["example" "elbName"]))))
+                 ["example" "elbName" :update false]))))
 
       (testing "apples handler-fn for each instance state"
         (let [error-fn (constantly nil)
@@ -161,7 +173,7 @@
              :instance-states-fn instance-states-fn
              :handler-fn handler-fn)
            ["example" "elbName:asgName"]
-           (hash-map))
+           {:update false})
           (is (= (-> (bond/calls handler-fn) first :args)
                  ["example" "asgName" {:instance-id "i-abc123"
                                        :state "InService"}])))))))

@@ -73,7 +73,8 @@
     ([arguments options]
      (if (:signal options)
        (signal-fn (first arguments)
-                  (:signal options))))))
+                  (:signal options)
+                  "--update")))))
 
 (defn make-futures
   [actions args done]

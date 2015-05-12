@@ -39,8 +39,9 @@ usage information for the given command.
 
     Usage: stack deploy <stack-name> <template> [opts...] [key=value...]
 
-      -h, --help         Print usage info
-      -p, --params FILE  Read parameters from FILE
+      -h, --help            Print usage info
+      -p, --params FILE     Read parameters from FILE
+      -s, --signal ELB:ASG  Poll ELB for healthy instances and signal ASG
 
 Lazily creates or updates `<stack-name>` with contents of the JSON file
 `<template>`.
@@ -77,6 +78,7 @@ Stack events are output until the delete completes.
 
       -h, --help    Print usage info
       -f, --follow  Poll for new events
+      -u, --update  Used with --follow, stop polling after stack update
 
 Outputs stack events for `<stack-name>` in chronological order.
 
@@ -91,7 +93,8 @@ If `<stack-name>` does not exist, outputs a non-fatal warning.
 
     Usage: stack signal <stack-name> <elb>:<asg> [opts...]
 
-      -h, --help  Print usage info
+      -h, --help    Print usage info
+      -u, --update  Stop signalling after stack update
 
 Polls the logical resource `<elb>` (which must be of type
 `AWS::ElasticLoadBalancing::LoadBalancer`) looking for healthy EC2 instances
@@ -102,7 +105,7 @@ Outputs instance states as changes occur.
 
 If `<elb>` or `<asg>` do not exist, outputs a non-fatal warning.
 
-This command never exits.
+This command never exits unless `--update` is given.
 
     $ stack signal blog-stack loadBalancer:autoScalingGroup
 

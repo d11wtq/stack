@@ -54,7 +54,7 @@
           ((deploy/dispatch-signal-fn :signal-fn signal-fn)
            ["example" "template.json"] {:signal "elb:asg"})
           (is (= (-> (bond/calls signal-fn) first :args)
-                 ["example" "elb:asg"])))))))
+                 ["example" "elb:asg" "--update"])))))))
 
 (deftest dispatch-parallel-actions-test
   (testing "#'dispatch-parallel-actions"
