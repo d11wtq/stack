@@ -1,6 +1,8 @@
 (ns stack.commands.signal
   (:require [stack.util :as util]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [clj-time.core :as joda])
+  (:import [com.amazonaws AmazonServiceException]))
 
 (def flags
   "Supported command line flags"
@@ -53,11 +55,13 @@
      (physical-id-fn stack-name elb-name))))
 
 (defn report-instance-state
-  [{:keys [instance-id state]}]
-  (println "Instance"
-           instance-id
-           "is now"
-           state))
+  ([instance date-time]
+   (println (str date-time)
+            (:instance-id instance)
+            (str "[" (:state instance) "]")
+            (:description instance)))
+  ([instance]
+   (report-instance-state instance (joda/now))))
 
 (defn handle-instance-state-fn
   [& {:keys [report-fn signal-fn]}]
@@ -65,9 +69,11 @@
     [stack-name asg-name state]
     (report-fn state)
     (if (success? (:state state))
-      (signal-fn stack-name
-                 asg-name
-                 (:instance-id state)))))
+      (try
+        (signal-fn stack-name
+                   asg-name
+                   (:instance-id state))
+        (catch AmazonServiceException e)))))
 
 (defn action-fn
   [& {:keys [instance-states-fn handler-fn error-fn]}]

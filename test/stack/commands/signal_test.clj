@@ -2,15 +2,19 @@
   (:require [clojure.test :refer :all]
             [clojure.string :as string]
             [bond.james :as bond]
-            [stack.commands.signal :as signal]))
+            [stack.commands.signal :as signal]
+            [clj-time.core :as joda]))
 
 (deftest report-instance-state-test
   (testing "#'report-instance-state"
     (testing "prints 'Instance <id> is now <state>'"
-      (let [output (with-out-str
+      (let [date-time (joda/now)
+            output (with-out-str
                      (signal/report-instance-state {:instance-id "i-abc123"
-                                                    :state "InService"}))]
-        (is (= "Instance i-abc123 is now InService"
+                                                    :state "InService"
+                                                    :description "Example"}
+                                                   date-time))]
+        (is (= (str date-time " i-abc123 [InService] Example")
                (string/trim output)))))))
 
 (deftest handle-instance-state-test

@@ -14,11 +14,15 @@
     (testing "returns all instance states"
       (let [health-fn (constantly
                         {:instance-states [{:instance-id "i-abc123"
-                                            :reason "Example"
+                                            :description "Example"
                                             :state "InService"}
                                            {:instance-id "i-def456"
-                                            :reason "Example"
+                                            :description "Example"
                                             :state "OutOfService"}]})]
-        (is (= [{:instance-id "i-abc123" :state "InService"}
-                {:instance-id "i-def456" :state "OutOfService"}]
+        (is (= [{:instance-id "i-abc123"
+                 :state "InService"
+                 :description "Example"}
+                {:instance-id "i-def456"
+                 :state "OutOfService"
+                 :description "Example"}]
                ((list-instance-states-fn :health-fn health-fn) "example")))))))

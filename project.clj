@@ -5,6 +5,7 @@
             :url "http://opensource.org/licenses/MIT"}
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [amazonica "0.3.12"]
+                 [clj-time "0.9.0"]
                  [org.clojure/tools.cli "0.3.1"]
                  [org.clojure/data.json "0.2.5"]
                  [bond "0.2.5"]]
