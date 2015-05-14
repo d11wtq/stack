@@ -3,6 +3,7 @@
             [bond.james :as bond]
             [stack.aws.cloudformation :refer [apply-stack-fn
                                               deploy-stack-fn
+                                              destroy-stack-fn
                                               stack-status-fn
                                               list-stack-events-fn
                                               stack-events-seq-fn
@@ -48,6 +49,14 @@
                  :template-body "{\"Description\":\"Example\"}"
                  :parameters [{:parameter-key "amiId"
                                :parameter-value "ami-abc123"}]}]))))))
+
+(deftest destroy-stack-test
+  (testing "#'destroy-stack"
+    (testing "applies delete-fn with the stack name"
+      (let [delete-fn (bond/spy (constantly nil))]
+        ((destroy-stack-fn :delete-fn delete-fn) "example")
+        (is (= (-> (bond/calls delete-fn) first :args)
+               [{:stack-name "example"}]))))))
 
 (deftest list-stack-events-test
   (testing "#'list-stack-events"

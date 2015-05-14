@@ -2,6 +2,7 @@
   (:require [stack.aws.cloudformation :as cloudformation]
             [amazonica.aws.cloudformation :refer [create-stack
                                                   update-stack
+                                                  delete-stack
                                                   describe-stacks
                                                   describe-stack-events
                                                   describe-stack-resource
@@ -15,6 +16,10 @@
 (def deploy-stack
   (cloudformation/deploy-stack-fn
     :apply-fn apply-stack))
+
+(def destroy-stack
+  (cloudformation/destroy-stack-fn
+    :delete-fn delete-stack))
 
 (def stack-status
   (cloudformation/stack-status-fn

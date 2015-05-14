@@ -34,6 +34,14 @@
                    :parameters (expand-parameters params)}]
       (apply-fn payload))))
 
+(defn destroy-stack-fn
+  "Delete the given stack stack-name."
+  [& {:keys [delete-fn]}]
+  (fn destroy-stack
+    [stack-name]
+    (let [payload {:stack-name stack-name}]
+      (delete-fn payload))))
+
 (defn list-stack-events-fn
   "Get a list of all events for stack-name."
   [& {:keys [events-fn]}]

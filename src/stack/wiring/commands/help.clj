@@ -1,6 +1,7 @@
 (ns stack.wiring.commands.help
   (:require [stack.commands.help :as help]
             [stack.wiring.commands.deploy :as deploy]
+            [stack.wiring.commands.delete :as delete]
             [stack.wiring.commands.events :as events]
             [stack.wiring.commands.signal :as signal]
             [stack.util :as util]))
@@ -9,6 +10,7 @@
   (help/action-fn
     :error-fn util/error-fn
     :subcommands [[:deploy deploy/dispatch]
+                  [:delete delete/dispatch]
                   [:events events/dispatch]
                   [:signal signal/dispatch]]))
 

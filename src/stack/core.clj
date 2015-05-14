@@ -2,6 +2,7 @@
   (:require [clojure.tools.cli :refer [parse-opts]]
             [stack.util :as util]
             [stack.wiring.commands.deploy :as deploy]
+            [stack.wiring.commands.delete :as delete]
             [stack.wiring.commands.events :as events]
             [stack.wiring.commands.signal :as signal]
             [stack.wiring.commands.help :as help])
@@ -37,6 +38,7 @@
 (def -main
   (make-dispatch-fn
     {:deploy deploy/dispatch
+     :delete delete/dispatch
      :events events/dispatch
      :signal signal/dispatch
      :help help/dispatch}
