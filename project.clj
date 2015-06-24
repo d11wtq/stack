@@ -1,4 +1,4 @@
-(defproject stack "0.1.0-SNAPSHOT"
+(defproject stack "0.1.0"
   :description "AWS CloudFormation Stack Deployer"
   :url "https://github.com/d11wtq/stack"
   :license {:name "MIT License"
@@ -9,5 +9,6 @@
                  [org.clojure/tools.cli "0.3.1"]
                  [org.clojure/data.json "0.2.5"]
                  [bond "0.2.5"]]
+  :plugins  [[lein-bin "0.3.4"]]
   :aot [stack.core]
   :main stack.core)
