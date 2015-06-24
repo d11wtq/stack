@@ -13,6 +13,24 @@ deployment of CloudFormation stacks. It has some smart features, such as:
   * Stack event polling
   * Client-side signalling based on ELB status
 
+## Install
+
+Download a suitable [release](https://github.com/d11wtq/stack/releases) and
+place it in your PATH.
+
+    $ curl -LO https://github.com/d11wtq/stack/releases/download/v0.1.0/stack-0.1.0
+    $ chmod +x stack-0.1.0
+    $ sudo mv stack-0.1.0 /usr/local/bin/
+    $ stack help
+    Usage: stack <command> [args...] [opts...]
+
+    Available commands:
+      deploy
+      delete
+      events
+      signal
+    $
+
 ## Usage
 
 Stack is sub-command driven, like git. Available commands are:
@@ -108,6 +126,11 @@ If `<elb>` or `<asg>` do not exist, outputs a non-fatal warning.
 This command never exits unless `--update` is given.
 
     $ stack signal blog-stack loadBalancer:autoScalingGroup
+
+## Development
+
+You can run the tests with `lein test`, you can invoke the program with
+`lein run` and you can produce an executable file with `lein bin`.
 
 ## License
 
